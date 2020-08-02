@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-init-config
+  namespace: oom-sample
+data:
+  init.sh: |
+    #!/bin/sh
+    apk --no-cache add curl jq
+    until curl grafana-svc:3000/api/health; do
+      sleep 1s
+    done
+    curl -u admin:admin -XPOST -H 'Content-Type: application/json' -d '{"name":"prometheus","type":"prometheus","url":"http://prometheus-svc:9090","access":"proxy","basicAuth":false}' grafana-svc:3000/api/datasources
+    dashboard=$(curl -u admin:admin grafana-svc:3000/api/gnet/dashboards/8563 | jq .json | sed 's/\${VAR_JOB}/java/')
+    curl -u admin:admin -XPOST -H 'Content-Type: application/json' -d "{\"dashboard\":$dashboard,\"overwrite\":true}" grafana-svc:3000/api/dashboards/db

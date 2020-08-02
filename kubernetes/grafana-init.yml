@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grafana-init
+  namespace: oom-sample
+spec:
+  template:
+    spec:
+      containers:
+      - name: grafana-init
+        image: alpine:latest
+        command: ["sh", "/opt/init.sh"]
+        volumeMounts:
+        - mountPath: /opt/init.sh
+          subPath: init.sh
+          name: config-volume
+      volumes:
+      - name: config-volume
+        configMap:
+          name: grafana-init-config
+      restartPolicy: Never
